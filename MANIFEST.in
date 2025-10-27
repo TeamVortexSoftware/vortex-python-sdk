@@ -1,0 +1,9 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+recursive-include src/vortex_sdk *.py
+recursive-include src/vortex_sdk py.typed
+exclude tests/
+exclude .github/
+exclude *.pyc
+exclude __pycache__/
