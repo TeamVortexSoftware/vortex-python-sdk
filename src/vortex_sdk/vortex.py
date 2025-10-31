@@ -2,6 +2,8 @@ import json
 import hmac
 import hashlib
 import base64
+import time
+import uuid
 from typing import Dict, List, Optional, Union, Literal
 from urllib.parse import urlencode
 import httpx
@@ -32,54 +34,104 @@ class Vortex:
 
     def generate_jwt(self, payload: Union[JwtPayload, Dict]) -> str:
         """
-        Generate a JWT token for the given payload
+        Generate a JWT token for the given payload matching Node.js SDK implementation
 
         Args:
             payload: JWT payload containing user_id, identifiers, groups, and role
 
         Returns:
             JWT token string
+
+        Raises:
+            ValueError: If API key format is invalid
         """
         if isinstance(payload, dict):
             payload = JwtPayload(**payload)
 
-        # JWT Header
-        header = {
-            "alg": "HS256",
-            "typ": "JWT"
-        }
+        # Parse API key (format: VRTX.base64url(uuid).key)
+        parts = self.api_key.split('.')
+        if len(parts) != 3:
+            raise ValueError('Invalid API key format. Expected: VRTX.{encodedId}.{key}')
 
-        # JWT Payload
-        jwt_payload = {
-            "userId": payload.user_id,
-            "identifiers": payload.identifiers,
-        }
+        prefix, encoded_id, key = parts
 
-        if payload.groups is not None:
-            jwt_payload["groups"] = payload.groups
-        if payload.role is not None:
-            jwt_payload["role"] = payload.role
+        if prefix != 'VRTX':
+            raise ValueError('Invalid API key prefix. Expected: VRTX')
 
-        # Encode header and payload
-        header_encoded = base64.urlsafe_b64encode(
-            json.dumps(header, separators=(',', ':')).encode()
-        ).decode().rstrip('=')
+        # Decode UUID from base64url
+        # Add padding if needed
+        padding = 4 - len(encoded_id) % 4
+        if padding != 4:
+            encoded_id_padded = encoded_id + ('=' * padding)
+        else:
+            encoded_id_padded = encoded_id
 
-        payload_encoded = base64.urlsafe_b64encode(
-            json.dumps(jwt_payload, separators=(',', ':')).encode()
-        ).decode().rstrip('=')
+        try:
+            uuid_bytes = base64.urlsafe_b64decode(encoded_id_padded)
+            kid = str(uuid.UUID(bytes=uuid_bytes))
+        except Exception as e:
+            raise ValueError(f'Invalid UUID in API key: {e}')
 
-        # Create signature
-        message = f"{header_encoded}.{payload_encoded}"
-        signature = hmac.new(
-            self.api_key.encode(),
-            message.encode(),
+        # Generate timestamps
+        iat = int(time.time())
+        expires = iat + 3600
+
+        # Step 1: Derive signing key from API key + UUID
+        signing_key = hmac.new(
+            key.encode(),
+            kid.encode(),
             hashlib.sha256
         ).digest()
 
-        signature_encoded = base64.urlsafe_b64encode(signature).decode().rstrip('=')
+        # Step 2: Build header + payload
+        header = {
+            'iat': iat,
+            'alg': 'HS256',
+            'typ': 'JWT',
+            'kid': kid,
+        }
 
-        return f"{message}.{signature_encoded}"
+        # Serialize identifiers
+        identifiers_list = [{"type": id.type, "value": id.value} for id in payload.identifiers]
+
+        # Serialize groups
+        groups_list = None
+        if payload.groups is not None:
+            groups_list = [
+                {k: v for k, v in group.model_dump(by_alias=True, exclude_none=True).items()}
+                for group in payload.groups
+            ]
+
+        jwt_payload = {
+            'userId': payload.user_id,
+            'groups': groups_list,
+            'role': payload.role,
+            'expires': expires,
+            'identifiers': identifiers_list,
+        }
+
+        # Add attributes if provided
+        if hasattr(payload, 'attributes') and payload.attributes:
+            jwt_payload['attributes'] = payload.attributes
+
+        # Step 3: Base64URL encode (without padding)
+        header_json = json.dumps(header, separators=(',', ':'))
+        payload_json = json.dumps(jwt_payload, separators=(',', ':'))
+
+        header_b64 = base64.urlsafe_b64encode(header_json.encode()).decode().rstrip('=')
+        payload_b64 = base64.urlsafe_b64encode(payload_json.encode()).decode().rstrip('=')
+
+        # Step 4: Sign
+        to_sign = f'{header_b64}.{payload_b64}'
+        signature = hmac.new(
+            signing_key,
+            to_sign.encode(),
+            hashlib.sha256
+        ).digest()
+
+        signature_b64 = base64.urlsafe_b64encode(signature).decode().rstrip('=')
+
+        return f'{to_sign}.{signature_b64}'
 
     async def _vortex_api_request(
         self,

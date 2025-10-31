@@ -8,6 +8,8 @@ from .vortex import Vortex
 from .types import (
     AuthenticatedUser,
     JwtPayload,
+    IdentifierInput,
+    GroupInput,
     InvitationTarget,
     Invitation,
     CreateInvitationRequest,
@@ -16,7 +18,7 @@ from .types import (
     VortexApiError
 )
 
-__version__ = "0.0.1"
+__version__ = "0.0.3"
 __author__ = "TeamVortexSoftware"
 __email__ = "support@vortexsoftware.com"
 
@@ -24,6 +26,8 @@ __all__ = [
     "Vortex",
     "AuthenticatedUser",
     "JwtPayload",
+    "IdentifierInput",
+    "GroupInput",
     "InvitationTarget",
     "Invitation",
     "CreateInvitationRequest",

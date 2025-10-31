@@ -1,13 +1,22 @@
-from typing import Dict, List, Optional, Union, Literal
-from pydantic import BaseModel
+from typing import Dict, List, Optional, Union, Literal, Any
+from pydantic import BaseModel, Field
+
+
+class IdentifierInput(BaseModel):
+    """Identifier structure for JWT generation"""
+    type: Literal["email", "sms"]
+    value: str
 
 
 class GroupInput(BaseModel):
     """Group structure for JWT generation (input)"""
     type: str
-    id: Optional[str] = None  # Legacy field (deprecated, use group_id)
-    group_id: Optional[str] = None  # Preferred: Customer's group ID
+    id: Optional[str] = None  # Legacy field (deprecated, use groupId)
+    groupId: Optional[str] = Field(None, alias="group_id", serialization_alias="groupId")  # Preferred: Customer's group ID
     name: str
+
+    class Config:
+        populate_by_name = True
 
 
 class InvitationGroup(BaseModel):
@@ -39,16 +48,17 @@ class InvitationGroup(BaseModel):
 
 class AuthenticatedUser(BaseModel):
     user_id: str
-    identifiers: Dict[str, str]
+    identifiers: List[IdentifierInput]
     groups: Optional[List[GroupInput]] = None
     role: Optional[str] = None
 
 
 class JwtPayload(BaseModel):
     user_id: str
-    identifiers: Dict[str, str]
+    identifiers: List[IdentifierInput]
     groups: Optional[List[GroupInput]] = None
     role: Optional[str] = None
+    attributes: Optional[Dict[str, Any]] = None
 
 
 class InvitationTarget(BaseModel):

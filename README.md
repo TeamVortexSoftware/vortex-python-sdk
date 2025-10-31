@@ -17,11 +17,11 @@ pip install vortex-python-sdk
 ```python
 from vortex_sdk import Vortex
 
-# Initialize the client
-vortex = Vortex(api_key="your-api-key")
+# Initialize the client with your Vortex API key
+vortex = Vortex(api_key="your-vortex-api-key")
 
 # Or with custom base URL
-vortex = Vortex(api_key="your-api-key", base_url="https://custom-api.example.com")
+vortex = Vortex(api_key="your-vortex-api-key", base_url="https://custom-api.example.com")
 ```
 
 ### JWT Generation
@@ -29,16 +29,33 @@ vortex = Vortex(api_key="your-api-key", base_url="https://custom-api.example.com
 ```python
 # Generate JWT for a user
 jwt = vortex.generate_jwt({
-    "user_id": "user123",
-    "identifiers": {
-        "email": "user@example.com",
-        "username": "johndoe"
-    },
-    "groups": ["admin", "users"],
+    "user_id": "user-123",
+    "identifiers": [
+        {"type": "email", "value": "user@example.com"}
+    ],
+    "groups": [
+        {"type": "team", "id": "team-1", "name": "Engineering"}
+    ],
     "role": "admin"
 })
 
 print(f"JWT: {jwt}")
+
+# Or using type-safe models
+from vortex_sdk import JwtPayload, IdentifierInput, GroupInput
+
+jwt = vortex.generate_jwt(
+    JwtPayload(
+        user_id="user-123",
+        identifiers=[
+            IdentifierInput(type="email", value="user@example.com")
+        ],
+        groups=[
+            GroupInput(type="team", id="team-1", name="Engineering")
+        ],
+        role="admin"
+    )
+)
 ```
 
 ### Invitation Management
