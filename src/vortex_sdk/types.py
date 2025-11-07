@@ -101,12 +101,20 @@ class InvitationResult(BaseModel):
     created_at: str = Field(alias="createdAt")
     deactivated: bool
     delivery_count: int = Field(alias="deliveryCount")
-    delivery_types: List[Literal["email", "sms", "share"]] = Field(alias="deliveryTypes")
+    delivery_types: List[Literal["email", "sms", "share"]] = Field(
+        alias="deliveryTypes"
+    )
     foreign_creator_id: str = Field(alias="foreignCreatorId")
     invitation_type: Literal["single_use", "multi_use"] = Field(alias="invitationType")
     modified_at: Optional[str] = Field(None, alias="modifiedAt")
     status: Literal[
-        "queued", "sending", "delivered", "accepted", "shared", "unfurled", "accepted_elsewhere"
+        "queued",
+        "sending",
+        "delivered",
+        "accepted",
+        "shared",
+        "unfurled",
+        "accepted_elsewhere",
     ]
     target: List[InvitationTarget]
     views: int
@@ -159,5 +167,7 @@ class VortexApiError(Exception):
 
 
 # Type aliases to match Node.js SDK
-ApiResponseJson = Union[InvitationResult, Dict[str, List[InvitationResult]], Dict[str, Any]]
+ApiResponseJson = Union[
+    InvitationResult, Dict[str, List[InvitationResult]], Dict[str, Any]
+]
 ApiRequestBody = Union[AcceptInvitationRequest, None]

@@ -4,15 +4,11 @@ import hmac
 import json
 import time
 import uuid
-from typing import Dict, List, Literal, Optional, Union
-from urllib.parse import urlencode
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import httpx
 
 from .types import (
-    AcceptInvitationsRequest,
-    ApiResponse,
-    CreateInvitationRequest,
     Invitation,
     InvitationTarget,
     JwtPayload,
@@ -20,9 +16,10 @@ from .types import (
 )
 
 
-def _get_version():
+def _get_version() -> str:
     """Lazy import of version to avoid circular import"""
     from . import __version__
+
     return __version__
 
 
@@ -80,7 +77,7 @@ class Vortex:
             uuid_bytes = base64.urlsafe_b64decode(encoded_id_padded)
             kid = str(uuid.UUID(bytes=uuid_bytes))
         except Exception as e:
-            raise ValueError(f"Invalid UUID in API key: {e}")
+            raise ValueError(f"Invalid UUID in API key: {e}") from e
 
         # Generate timestamps
         iat = int(time.time())
@@ -106,16 +103,11 @@ class Vortex:
         groups_list = None
         if payload.groups is not None:
             groups_list = [
-                {
-                    k: v
-                    for k, v in group.model_dump(
-                        by_alias=True, exclude_none=True
-                    ).items()
-                }
+                group.model_dump(by_alias=True, exclude_none=True)
                 for group in payload.groups
             ]
 
-        jwt_payload = {
+        jwt_payload: Dict[str, Any] = {
             "userId": payload.user_id,
             "groups": groups_list,
             "role": payload.role,
@@ -185,17 +177,17 @@ class Vortex:
                         "error",
                         f"API request failed with status {response.status_code}",
                     )
-                except:
+                except Exception:
                     error_message = (
                         f"API request failed with status {response.status_code}"
                     )
 
                 raise VortexApiError(error_message, response.status_code)
 
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
 
         except httpx.RequestError as e:
-            raise VortexApiError(f"Request failed: {str(e)}")
+            raise VortexApiError(f"Request failed: {str(e)}") from e
 
     def _vortex_api_request_sync(
         self,
@@ -238,17 +230,17 @@ class Vortex:
                         "error",
                         f"API request failed with status {response.status_code}",
                     )
-                except:
+                except Exception:
                     error_message = (
                         f"API request failed with status {response.status_code}"
                     )
 
                 raise VortexApiError(error_message, response.status_code)
 
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
 
         except httpx.RequestError as e:
-            raise VortexApiError(f"Request failed: {str(e)}")
+            raise VortexApiError(f"Request failed: {str(e)}") from e
 
     async def get_invitations_by_target(
         self,
@@ -335,10 +327,13 @@ class Vortex:
         Returns:
             API response
         """
+        target_obj: InvitationTarget
         if isinstance(target, dict):
-            target = InvitationTarget(**target)
+            target_obj = InvitationTarget(**target)  # type: ignore[arg-type]
+        else:
+            target_obj = target
 
-        data = {"invitationIds": invitation_ids, "target": target.model_dump()}
+        data = {"invitationIds": invitation_ids, "target": target_obj.model_dump()}
 
         return await self._vortex_api_request("POST", "/invitations/accept", data=data)
 
@@ -355,10 +350,13 @@ class Vortex:
         Returns:
             API response
         """
+        target_obj: InvitationTarget
         if isinstance(target, dict):
-            target = InvitationTarget(**target)
+            target_obj = InvitationTarget(**target)  # type: ignore[arg-type]
+        else:
+            target_obj = target
 
-        data = {"invitationIds": invitation_ids, "target": target.model_dump()}
+        data = {"invitationIds": invitation_ids, "target": target_obj.model_dump()}
 
         return self._vortex_api_request_sync("POST", "/invitations/accept", data=data)
 
@@ -482,26 +480,26 @@ class Vortex:
         )
         return Invitation(**response)
 
-    async def close(self):
+    async def close(self) -> None:
         """Close the HTTP client"""
         await self._client.aclose()
 
-    def close_sync(self):
+    def close_sync(self) -> None:
         """Close the synchronous HTTP client"""
         self._sync_client.close()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "Vortex":
         """Async context manager entry"""
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Async context manager exit"""
         await self.close()
 
-    def __enter__(self):
+    def __enter__(self) -> "Vortex":
         """Context manager entry"""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit"""
         self.close_sync()
