@@ -112,8 +112,8 @@ class InvitationResult(BaseModel):
     views: int
     widget_configuration_id: str = Field(alias="widgetConfigurationId")
     project_id: str = Field(alias="projectId")
-    groups: List[Optional[InvitationGroup]] = []
-    accepts: List[InvitationAcceptance] = []
+    groups: List[Optional[InvitationGroup]] = Field(default_factory=list)
+    accepts: List[InvitationAcceptance] = Field(default_factory=list)
 
     class Config:
         populate_by_name = True
