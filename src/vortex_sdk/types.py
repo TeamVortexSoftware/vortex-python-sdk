@@ -1,18 +1,23 @@
-from typing import Dict, List, Optional, Union, Literal, Any
+from typing import Any, Dict, List, Literal, Optional, Union
+
 from pydantic import BaseModel, Field
 
 
 class IdentifierInput(BaseModel):
     """Identifier structure for JWT generation"""
+
     type: Literal["email", "sms"]
     value: str
 
 
 class GroupInput(BaseModel):
     """Group structure for JWT generation (input)"""
+
     type: str
     id: Optional[str] = None  # Legacy field (deprecated, use groupId)
-    groupId: Optional[str] = Field(None, alias="group_id", serialization_alias="groupId")  # Preferred: Customer's group ID
+    groupId: Optional[str] = Field(
+        None, alias="group_id", serialization_alias="groupId"
+    )  # Preferred: Customer's group ID
     name: str
 
     class Config:
@@ -24,12 +29,13 @@ class InvitationGroup(BaseModel):
     Invitation group from API responses
     This matches the MemberGroups table structure from the API
     """
+
     id: str  # Vortex internal UUID
-    account_id: str  # Vortex account ID (camelCase in JSON: accountId)
-    group_id: str  # Customer's group ID (camelCase in JSON: groupId)
+    account_id: str = Field(alias="accountId")  # Vortex account ID
+    group_id: str = Field(alias="groupId")  # Customer's group ID
     type: str  # Group type (e.g., "workspace", "team")
     name: str  # Group name
-    created_at: str  # ISO 8601 timestamp (camelCase in JSON: createdAt)
+    created_at: str = Field(alias="createdAt")  # ISO 8601 timestamp
 
     class Config:
         # Allow both snake_case (Python) and camelCase (JSON) field names
@@ -41,7 +47,7 @@ class InvitationGroup(BaseModel):
                 "groupId": "workspace-123",
                 "type": "workspace",
                 "name": "My Workspace",
-                "createdAt": "2025-01-27T12:00:00.000Z"
+                "createdAt": "2025-01-27T12:00:00.000Z",
             }
         }
 
@@ -62,19 +68,59 @@ class JwtPayload(BaseModel):
 
 
 class InvitationTarget(BaseModel):
-    type: Literal["email", "username", "phoneNumber"]
+    type: Literal["email", "sms"]
     value: str
 
 
-class Invitation(BaseModel):
+class InvitationAcceptance(BaseModel):
+    """Represents an acceptance of an invitation"""
+
     id: str
+    account_id: str = Field(alias="accountId")
+    project_id: str = Field(alias="projectId")
+    accepted_at: str = Field(alias="acceptedAt")
     target: InvitationTarget
-    groups: Optional[List[InvitationGroup]] = None  # Full group information
-    status: str
-    created_at: str
-    updated_at: Optional[str] = None
-    expires_at: Optional[str] = None
-    metadata: Optional[Dict[str, Union[str, int, bool]]] = None
+
+    class Config:
+        populate_by_name = True
+
+
+class InvitationResult(BaseModel):
+    """
+    Complete invitation result from API responses.
+    This is the exact port of the Node.js SDK's InvitationResult type.
+    """
+
+    id: str
+    account_id: str = Field(alias="accountId")
+    click_throughs: int = Field(alias="clickThroughs")
+    configuration_attributes: Optional[Dict[str, Any]] = Field(
+        None, alias="configurationAttributes"
+    )
+    attributes: Optional[Dict[str, Any]] = None
+    created_at: str = Field(alias="createdAt")
+    deactivated: bool
+    delivery_count: int = Field(alias="deliveryCount")
+    delivery_types: List[Literal["email", "sms", "share"]] = Field(alias="deliveryTypes")
+    foreign_creator_id: str = Field(alias="foreignCreatorId")
+    invitation_type: Literal["single_use", "multi_use"] = Field(alias="invitationType")
+    modified_at: Optional[str] = Field(None, alias="modifiedAt")
+    status: Literal[
+        "queued", "sending", "delivered", "accepted", "shared", "unfurled", "accepted_elsewhere"
+    ]
+    target: List[InvitationTarget]
+    views: int
+    widget_configuration_id: str = Field(alias="widgetConfigurationId")
+    project_id: str = Field(alias="projectId")
+    groups: List[Optional[InvitationGroup]] = []
+    accepts: List[InvitationAcceptance] = []
+
+    class Config:
+        populate_by_name = True
+
+
+# Alias for backward compatibility
+Invitation = InvitationResult
 
 
 class CreateInvitationRequest(BaseModel):
@@ -85,9 +131,18 @@ class CreateInvitationRequest(BaseModel):
     metadata: Optional[Dict[str, Union[str, int, bool]]] = None
 
 
-class AcceptInvitationsRequest(BaseModel):
-    invitation_ids: List[str]
+class AcceptInvitationRequest(BaseModel):
+    """Request to accept one or more invitations"""
+
+    invitation_ids: List[str] = Field(alias="invitationIds")
     target: InvitationTarget
+
+    class Config:
+        populate_by_name = True
+
+
+# Alias for backward compatibility
+AcceptInvitationsRequest = AcceptInvitationRequest
 
 
 class ApiResponse(BaseModel):
@@ -101,3 +156,8 @@ class VortexApiError(Exception):
         self.message = message
         self.status_code = status_code
         super().__init__(message)
+
+
+# Type aliases to match Node.js SDK
+ApiResponseJson = Union[InvitationResult, Dict[str, List[InvitationResult]], Dict[str, Any]]
+ApiRequestBody = Union[AcceptInvitationRequest, None]

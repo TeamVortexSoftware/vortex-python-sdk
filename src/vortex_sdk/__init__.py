@@ -4,21 +4,27 @@ Vortex Python SDK
 A Python SDK for Vortex invitation management and JWT generation.
 """
 
-from .vortex import Vortex
 from .types import (
-    AuthenticatedUser,
-    JwtPayload,
-    IdentifierInput,
-    GroupInput,
-    InvitationTarget,
-    Invitation,
-    CreateInvitationRequest,
+    AcceptInvitationRequest,
     AcceptInvitationsRequest,
+    ApiRequestBody,
     ApiResponse,
-    VortexApiError
+    ApiResponseJson,
+    AuthenticatedUser,
+    CreateInvitationRequest,
+    GroupInput,
+    IdentifierInput,
+    Invitation,
+    InvitationAcceptance,
+    InvitationGroup,
+    InvitationResult,
+    InvitationTarget,
+    JwtPayload,
+    VortexApiError,
 )
+from .vortex import Vortex
 
-__version__ = "0.0.3"
+__version__ = "0.0.5"
 __author__ = "TeamVortexSoftware"
 __email__ = "support@vortexsoftware.com"
 
@@ -29,9 +35,15 @@ __all__ = [
     "IdentifierInput",
     "GroupInput",
     "InvitationTarget",
-    "Invitation",
+    "InvitationGroup",
+    "InvitationAcceptance",
+    "InvitationResult",
+    "Invitation",  # Alias for InvitationResult
     "CreateInvitationRequest",
-    "AcceptInvitationsRequest",
+    "AcceptInvitationRequest",
+    "AcceptInvitationsRequest",  # Alias for AcceptInvitationRequest
     "ApiResponse",
+    "ApiResponseJson",
+    "ApiRequestBody",
     "VortexApiError",
 ]

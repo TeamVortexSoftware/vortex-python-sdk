@@ -8,14 +8,29 @@ This guide walks you through publishing the Vortex Python SDK to PyPI so users c
    - [TestPyPI](https://test.pypi.org/account/register/) (for testing)
    - [PyPI](https://pypi.org/account/register/) (for production)
 
-2. **API Tokens**: Generate API tokens (recommended over username/password):
+1. **API Tokens**: Generate API tokens (recommended over username/password):
    - TestPyPI: https://test.pypi.org/manage/account/#api-tokens
    - PyPI: https://pypi.org/manage/account/#api-tokens
 
-3. **Required Tools**:
+1. **Required Tools**:
    ```bash
    pip install build twine
    ```
+  1. Or, if you installed python via homebrew:
+
+  ```
+    # Create a virtual environment in the vortex-python-sdk directory
+    python3 -m venv venv
+
+    # Activate it
+    source venv/bin/activate
+
+    # Now install the tools
+    pip install build twine
+
+    # Install the SDK in development mode
+    pip install -e ".[dev]"
+```
 
 ## Manual Publishing Process
 
