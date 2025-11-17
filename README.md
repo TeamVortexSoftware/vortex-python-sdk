@@ -28,34 +28,32 @@ vortex = Vortex(api_key="your-vortex-api-key", base_url="https://custom-api.exam
 
 ```python
 # Generate JWT for a user
-jwt = vortex.generate_jwt({
-    "user_id": "user-123",
-    "identifiers": [
-        {"type": "email", "value": "user@example.com"}
-    ],
-    "groups": [
-        {"type": "team", "id": "team-1", "name": "Engineering"}
-    ],
-    "role": "admin"
-})
+user = {
+    "id": "user-123",
+    "email": "user@example.com",
+    "admin_scopes": ["autoJoin"]  # Optional - maps to userIsAutoJoinAdmin
+}
 
+jwt = vortex.generate_jwt(user=user)
 print(f"JWT: {jwt}")
 
-# Or using type-safe models
-from vortex_sdk import JwtPayload, IdentifierInput, GroupInput
-
+# With additional properties
 jwt = vortex.generate_jwt(
-    JwtPayload(
-        user_id="user-123",
-        identifiers=[
-            IdentifierInput(type="email", value="user@example.com")
-        ],
-        groups=[
-            GroupInput(type="team", id="team-1", name="Engineering")
-        ],
-        role="admin"
-    )
+    user=user,
+    role="admin",
+    department="Engineering"
 )
+
+# Or using type-safe models
+from vortex_sdk import User
+
+user = User(
+    id="user-123",
+    email="user@example.com",
+    admin_scopes=["autoJoin"]
+)
+
+jwt = vortex.generate_jwt(user=user)
 ```
 
 ### Invitation Management

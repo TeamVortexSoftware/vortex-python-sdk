@@ -11,7 +11,7 @@ import httpx
 from .types import (
     Invitation,
     InvitationTarget,
-    JwtPayload,
+    User,
     VortexApiError,
 )
 
@@ -39,21 +39,30 @@ class Vortex:
         self._client = httpx.AsyncClient()
         self._sync_client = httpx.Client()
 
-    def generate_jwt(self, payload: Union[JwtPayload, Dict]) -> str:
+    def generate_jwt(self, user: Union[User, Dict], **extra: Any) -> str:
         """
-        Generate a JWT token for the given payload matching Node.js SDK implementation
+        Generate a JWT token for a user
 
         Args:
-            payload: JWT payload containing user_id, identifiers, groups, and role
+            user: User object or dict with 'id', 'email', and optional 'admin_scopes'
+            **extra: Additional properties to include in JWT payload
 
         Returns:
             JWT token string
 
         Raises:
-            ValueError: If API key format is invalid
+            ValueError: If API key format is invalid or required fields are missing
+
+        Example:
+            user = {'id': 'user-123', 'email': 'user@example.com', 'admin_scopes': ['autoJoin']}
+            jwt = vortex.generate_jwt(user=user)
+
+            # With additional properties
+            jwt = vortex.generate_jwt(user=user, role='admin', department='Engineering')
         """
-        if isinstance(payload, dict):
-            payload = JwtPayload(**payload)
+        # Convert dict to User if needed
+        if isinstance(user, dict):
+            user = User(**user)
 
         # Parse API key (format: VRTX.base64url(uuid).key)
         parts = self.api_key.split(".")
@@ -94,30 +103,24 @@ class Vortex:
             "kid": kid,
         }
 
-        # Serialize identifiers
-        identifiers_list = [
-            {"type": id.type, "value": id.value} for id in payload.identifiers
-        ]
-
-        # Serialize groups
-        groups_list = None
-        if payload.groups is not None:
-            groups_list = [
-                group.model_dump(by_alias=True, exclude_none=True)
-                for group in payload.groups
-            ]
-
+        # Build JWT payload
         jwt_payload: Dict[str, Any] = {
-            "userId": payload.user_id,
-            "groups": groups_list,
-            "role": payload.role,
+            "userId": user.id,
+            "userEmail": user.email,
             "expires": expires,
-            "identifiers": identifiers_list,
         }
 
-        # Add attributes if provided
-        if hasattr(payload, "attributes") and payload.attributes:
-            jwt_payload["attributes"] = payload.attributes
+        # Add userIsAutoJoinAdmin if 'autoJoin' is in admin_scopes
+        if user.admin_scopes and 'autoJoin' in user.admin_scopes:
+            jwt_payload["userIsAutoJoinAdmin"] = True
+
+        # Add any additional properties from user.model_extra
+        if hasattr(user, "model_extra") and user.model_extra:
+            jwt_payload.update(user.model_extra)
+
+        # Add any additional properties from **extra
+        if extra:
+            jwt_payload.update(extra)
 
         # Step 3: Base64URL encode (without padding)
         header_json = json.dumps(header, separators=(",", ":"))

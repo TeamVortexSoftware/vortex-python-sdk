@@ -52,19 +52,76 @@ class InvitationGroup(BaseModel):
         }
 
 
+class User(BaseModel):
+    """
+    User data for JWT generation
+
+    Required fields:
+    - id: User's ID in their system
+    - email: User's email address
+
+    Optional fields:
+    - admin_scopes: List of admin scopes (e.g., ['autoJoin'])
+
+    Additional fields are allowed via extra parameter
+    """
+    id: str
+    email: str
+    admin_scopes: Optional[List[str]] = None
+
+    class Config:
+        extra = "allow"  # Allow additional fields
+
+
 class AuthenticatedUser(BaseModel):
+    """
+    User data for JWT generation (simplified structure)
+
+    Note: identifiers, groups, and role are maintained for backward compatibility
+    but are deprecated in favor of the User object with admin_scopes.
+    """
     user_id: str
-    identifiers: List[IdentifierInput]
+    user_email: Optional[str] = None
+    admin_scopes: Optional[List[str]] = None
+
+    # Deprecated fields (maintained for backward compatibility)
+    identifiers: Optional[List[IdentifierInput]] = None
     groups: Optional[List[GroupInput]] = None
     role: Optional[str] = None
 
 
 class JwtPayload(BaseModel):
+    """
+    JWT payload structure (simplified)
+
+    Required fields:
+    - user_id: User's ID in their system
+    - user_email: User's email address (preferred)
+
+    Optional fields:
+    - admin_scopes: List of admin scopes (e.g., ['autoJoin'] for auto-join admin privileges)
+    - attributes: Additional custom attributes
+
+    Deprecated fields (maintained for backward compatibility):
+    - identifiers: Use user_email instead
+    - groups: No longer required
+    - role: No longer required
+
+    Additional fields are allowed via [key: string]: any pattern
+    """
     user_id: str
-    identifiers: List[IdentifierInput]
+    user_email: Optional[str] = None
+    admin_scopes: Optional[List[str]] = None
+
+    # Deprecated fields (maintained for backward compatibility)
+    identifiers: Optional[List[IdentifierInput]] = None
     groups: Optional[List[GroupInput]] = None
     role: Optional[str] = None
+
     attributes: Optional[Dict[str, Any]] = None
+
+    class Config:
+        extra = "allow"  # Allow additional fields [key: string]: any
 
 
 class InvitationTarget(BaseModel):

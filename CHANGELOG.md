@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **JWT Payload Simplification**: Updated JWT structure to use simplified fields (backward compatible)
+  - **NEW (Preferred)**: Use `User` object with `id`, `email`, and `admin_scopes` for cleaner, more maintainable code
+  - `id` (string): User's ID in your system
+  - `email` (string): User's email address - replaces the `identifiers` array
+  - `admin_scopes` (list): List of admin scopes (e.g., `['autoJoin']` for auto-join admin privileges)
+  - **DEPRECATED (Still Supported)**: `identifiers`, `groups`, and `role` fields maintained for backward compatibility
+  - Supports additional properties via Pydantic's `extra="allow"` configuration
+  - All existing integrations will continue to work without changes
+
+### Migration Guide (Optional - Backward Compatible)
+
+The old format still works, but we recommend migrating to the simpler structure:
+
+**New simplified format (recommended):**
+```python
+user = {
+    "id": "user-123",
+    "email": "user@example.com",
+    "admin_scopes": ["autoJoin"]  # optional: grants auto-join admin privileges
+}
+jwt = vortex.generate_jwt(user=user)
+```
+
+**Old format (still supported):**
+```python
+jwt = vortex.generate_jwt({
+    "user_id": "user-123",
+    "identifiers": [{"type": "email", "value": "user@example.com"}],
+    "groups": [{"type": "team", "id": "team-1", "name": "Engineering"}],
+    "role": "admin"
+})
+```
+
 ## [0.0.5] - 2025-11-06
 
 ### Fixed
