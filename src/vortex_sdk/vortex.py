@@ -110,9 +110,9 @@ class Vortex:
             "expires": expires,
         }
 
-        # Add userIsAutoJoinAdmin if 'autoJoin' is in admin_scopes
-        if user.admin_scopes and 'autoJoin' in user.admin_scopes:
-            jwt_payload["userIsAutoJoinAdmin"] = True
+        # Add adminScopes if present
+        if user.admin_scopes:
+            jwt_payload["adminScopes"] = user.admin_scopes
 
         # Add any additional properties from user.model_extra
         if hasattr(user, "model_extra") and user.model_extra:
@@ -263,7 +263,7 @@ class Vortex:
         params = {"targetType": target_type, "targetValue": target_value}
 
         response = await self._vortex_api_request(
-            "GET", "/invitations/by-target", params=params
+            "GET", "/invitations", params=params
         )
         return [Invitation(**inv) for inv in response.get("invitations", [])]
 
@@ -285,7 +285,7 @@ class Vortex:
         params = {"targetType": target_type, "targetValue": target_value}
 
         response = self._vortex_api_request_sync(
-            "GET", "/invitations/by-target", params=params
+            "GET", "/invitations", params=params
         )
         return [Invitation(**inv) for inv in response.get("invitations", [])]
 
