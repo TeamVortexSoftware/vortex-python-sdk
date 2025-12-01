@@ -179,6 +179,8 @@ class InvitationResult(BaseModel):
     project_id: str = Field(alias="projectId")
     groups: List[Optional[InvitationGroup]] = Field(default_factory=list)
     accepts: List[InvitationAcceptance] = Field(default_factory=list)
+    expired: bool
+    expires: Optional[str] = None
 
     class Config:
         populate_by_name = True
