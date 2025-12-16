@@ -61,7 +61,7 @@ class User(BaseModel):
     - email: User's email address
 
     Optional fields:
-    - admin_scopes: List of admin scopes (e.g., ['autoJoin'])
+    - admin_scopes: List of admin scopes (e.g., ['autojoin'])
 
     Additional fields are allowed via extra parameter
     """
@@ -99,7 +99,7 @@ class JwtPayload(BaseModel):
     - user_email: User's email address (preferred)
 
     Optional fields:
-    - admin_scopes: List of admin scopes (e.g., ['autoJoin'] for auto-join admin privileges)
+    - admin_scopes: List of admin scopes (e.g., ['autojoin'] for autojoin admin privileges)
     - attributes: Additional custom attributes
 
     Deprecated fields (maintained for backward compatibility):
@@ -173,7 +173,7 @@ class InvitationResult(BaseModel):
         "unfurled",
         "accepted_elsewhere",
     ]
-    target: List[InvitationTarget]
+    target: List[InvitationTarget] = Field(default_factory=list)
     views: int
     widget_configuration_id: str = Field(alias="widgetConfigurationId")
     project_id: str = Field(alias="projectId")

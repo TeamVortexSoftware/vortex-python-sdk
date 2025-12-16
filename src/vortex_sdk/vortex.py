@@ -54,7 +54,7 @@ class Vortex:
             ValueError: If API key format is invalid or required fields are missing
 
         Example:
-            user = {'id': 'user-123', 'email': 'user@example.com', 'admin_scopes': ['autoJoin']}
+            user = {'id': 'user-123', 'email': 'user@example.com', 'admin_scopes': ['autojoin']}
             jwt = vortex.generate_jwt(user=user)
 
             # With additional properties
@@ -187,6 +187,10 @@ class Vortex:
 
                 raise VortexApiError(error_message, response.status_code)
 
+            # Handle empty responses (e.g., DELETE requests may return 204 or empty 200)
+            if response.status_code == 204 or not response.content:
+                return {}  # type: ignore[return-value]
+
             return response.json()  # type: ignore[no-any-return]
 
         except httpx.RequestError as e:
@@ -239,6 +243,10 @@ class Vortex:
                     )
 
                 raise VortexApiError(error_message, response.status_code)
+
+            # Handle empty responses (e.g., DELETE requests may return 204 or empty 200)
+            if response.status_code == 204 or not response.content:
+                return {}  # type: ignore[return-value]
 
             return response.json()  # type: ignore[no-any-return]
 

@@ -31,7 +31,7 @@ vortex = Vortex(api_key="your-vortex-api-key", base_url="https://custom-api.exam
 user = {
     "id": "user-123",
     "email": "user@example.com",
-    "admin_scopes": ["autoJoin"]  # Optional - included as adminScopes array in JWT
+    "admin_scopes": ["autojoin"]  # Optional - included as adminScopes array in JWT
 }
 
 jwt = vortex.generate_jwt(user=user)
@@ -50,7 +50,7 @@ from vortex_sdk import User
 user = User(
     id="user-123",
     email="user@example.com",
-    admin_scopes=["autoJoin"]
+    admin_scopes=["autojoin"]
 )
 
 jwt = vortex.generate_jwt(user=user)
