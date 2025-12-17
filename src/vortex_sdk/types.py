@@ -176,11 +176,16 @@ class InvitationResult(BaseModel):
     target: List[InvitationTarget] = Field(default_factory=list)
     views: int
     widget_configuration_id: str = Field(alias="widgetConfigurationId")
+    deployment_id: str = Field(alias="deploymentId")
     project_id: str = Field(alias="projectId")
     groups: List[Optional[InvitationGroup]] = Field(default_factory=list)
     accepts: List[InvitationAcceptance] = Field(default_factory=list)
+    scope: Optional[str] = None
+    scope_type: Optional[str] = Field(None, alias="scopeType")
     expired: bool
     expires: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+    pass_through: Optional[str] = Field(None, alias="passThrough")
 
     class Config:
         populate_by_name = True
