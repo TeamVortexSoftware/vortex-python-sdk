@@ -38,7 +38,7 @@ This guide walks you through publishing the Vortex Python SDK to PyPI so users c
 
 ```bash
 # Navigate to the package directory
-cd packages/vortex-python-sdk
+cd sdks/vortex-python-sdk
 
 # Clean any previous builds
 rm -rf dist/ build/ *.egg-info/
@@ -191,7 +191,7 @@ jobs:
 
     - name: Build package
       run: python -m build
-      working-directory: packages/vortex-python-sdk
+      working-directory: sdks/vortex-python-sdk
 
     - name: Publish to TestPyPI
       if: \${{ github.event.inputs.publish_to_testpypi == 'true' }}
@@ -200,7 +200,7 @@ jobs:
         user: __token__
         password: \${{ secrets.TEST_PYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
-        packages_dir: packages/vortex-python-sdk/dist/
+        packages_dir: sdks/vortex-python-sdk/dist/
 
     - name: Publish to PyPI
       if: \${{ github.event.inputs.publish_to_testpypi != 'true' }}
@@ -208,7 +208,7 @@ jobs:
       with:
         user: __token__
         password: \${{ secrets.PYPI_API_TOKEN }}
-        packages_dir: packages/vortex-python-sdk/dist/
+        packages_dir: sdks/vortex-python-sdk/dist/
 ```
 
 ## Release Process

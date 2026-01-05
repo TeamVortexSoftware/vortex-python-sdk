@@ -2,13 +2,17 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import time
 import uuid
 from typing import Any, Dict, List, Literal, Optional, Union
 
 import httpx
 
+logger = logging.getLogger(__name__)
+
 from .types import (
+    AcceptUser,
     Invitation,
     InvitationTarget,
     User,
@@ -326,48 +330,188 @@ class Vortex:
         return Invitation(**response)
 
     async def accept_invitations(
-        self, invitation_ids: List[str], target: Union[InvitationTarget, Dict[str, str]]
+        self,
+        invitation_ids: List[str],
+        user_or_target: Union[AcceptUser, InvitationTarget, Dict[str, Any], List[Union[InvitationTarget, Dict[str, str]]]],
     ) -> Dict:
         """
-        Accept multiple invitations
+        Accept multiple invitations using the new User format (preferred)
 
         Args:
             invitation_ids: List of invitation IDs to accept
-            target: Target information (type and value)
+            user_or_target: User object with email/phone/name (preferred) OR legacy target format (deprecated)
 
         Returns:
             API response
-        """
-        target_obj: InvitationTarget
-        if isinstance(target, dict):
-            target_obj = InvitationTarget(**target)  # type: ignore[arg-type]
-        else:
-            target_obj = target
 
-        data = {"invitationIds": invitation_ids, "target": target_obj.model_dump()}
+        Example (new format):
+            user = AcceptUser(email="user@example.com", name="John Doe")
+            result = await client.accept_invitations(["inv-123"], user)
+
+        Example (legacy format - deprecated):
+            target = InvitationTarget(type="email", value="user@example.com")
+            result = await client.accept_invitations(["inv-123"], target)
+        """
+        # Check if it's a list of targets (legacy format with multiple targets)
+        if isinstance(user_or_target, list):
+            logger.warning(
+                "[Vortex SDK] DEPRECATED: Passing a list of targets is deprecated. "
+                "Use the AcceptUser format and call once per user instead."
+            )
+            if not user_or_target:
+                raise ValueError("No targets provided")
+
+            last_result = None
+            last_exception = None
+
+            for target in user_or_target:
+                try:
+                    last_result = await self.accept_invitations(invitation_ids, target)
+                except Exception as e:
+                    last_exception = e
+
+            if last_exception:
+                raise last_exception
+
+            return last_result or {}
+
+        # Check if it's a legacy InvitationTarget
+        is_legacy_target = isinstance(user_or_target, InvitationTarget) or (
+            isinstance(user_or_target, dict)
+            and "type" in user_or_target
+            and "value" in user_or_target
+        )
+
+        if is_legacy_target:
+            logger.warning(
+                "[Vortex SDK] DEPRECATED: Passing an InvitationTarget is deprecated. "
+                "Use the AcceptUser format instead: AcceptUser(email='user@example.com')"
+            )
+
+            # Convert target to User format
+            if isinstance(user_or_target, InvitationTarget):
+                target_type = user_or_target.type
+                target_value = user_or_target.value
+            else:
+                target_type = user_or_target["type"]
+                target_value = user_or_target["value"]
+
+            user = AcceptUser()
+            if target_type == "email":
+                user.email = target_value
+            elif target_type in ("sms", "phoneNumber"):
+                user.phone = target_value
+            else:
+                # For other types, try to use as email
+                user.email = target_value
+
+            # Recursively call with User format
+            return await self.accept_invitations(invitation_ids, user)
+
+        # New User format
+        if isinstance(user_or_target, dict):
+            user = AcceptUser(**user_or_target)
+        else:
+            user = user_or_target
+
+        # Validate that either email or phone is provided
+        if not user.email and not user.phone:
+            raise ValueError("User must have either email or phone")
+
+        data = {"invitationIds": invitation_ids, "user": user.model_dump(exclude_none=True)}
 
         return await self._vortex_api_request("POST", "/invitations/accept", data=data)
 
     def accept_invitations_sync(
-        self, invitation_ids: List[str], target: Union[InvitationTarget, Dict[str, str]]
+        self,
+        invitation_ids: List[str],
+        user_or_target: Union[AcceptUser, InvitationTarget, Dict[str, Any], List[Union[InvitationTarget, Dict[str, str]]]],
     ) -> Dict:
         """
-        Accept multiple invitations (synchronous)
+        Accept multiple invitations using the new User format (synchronous version)
 
         Args:
             invitation_ids: List of invitation IDs to accept
-            target: Target information (type and value)
+            user_or_target: User object with email/phone/name (preferred) OR legacy target format (deprecated)
 
         Returns:
             API response
-        """
-        target_obj: InvitationTarget
-        if isinstance(target, dict):
-            target_obj = InvitationTarget(**target)  # type: ignore[arg-type]
-        else:
-            target_obj = target
 
-        data = {"invitationIds": invitation_ids, "target": target_obj.model_dump()}
+        Example (new format):
+            user = AcceptUser(email="user@example.com", name="John Doe")
+            result = client.accept_invitations_sync(["inv-123"], user)
+
+        Example (legacy format - deprecated):
+            target = InvitationTarget(type="email", value="user@example.com")
+            result = client.accept_invitations_sync(["inv-123"], target)
+        """
+        # Check if it's a list of targets (legacy format with multiple targets)
+        if isinstance(user_or_target, list):
+            logger.warning(
+                "[Vortex SDK] DEPRECATED: Passing a list of targets is deprecated. "
+                "Use the AcceptUser format and call once per user instead."
+            )
+            if not user_or_target:
+                raise ValueError("No targets provided")
+
+            last_result = None
+            last_exception = None
+
+            for target in user_or_target:
+                try:
+                    last_result = self.accept_invitations_sync(invitation_ids, target)
+                except Exception as e:
+                    last_exception = e
+
+            if last_exception:
+                raise last_exception
+
+            return last_result or {}
+
+        # Check if it's a legacy InvitationTarget
+        is_legacy_target = isinstance(user_or_target, InvitationTarget) or (
+            isinstance(user_or_target, dict)
+            and "type" in user_or_target
+            and "value" in user_or_target
+        )
+
+        if is_legacy_target:
+            logger.warning(
+                "[Vortex SDK] DEPRECATED: Passing an InvitationTarget is deprecated. "
+                "Use the AcceptUser format instead: AcceptUser(email='user@example.com')"
+            )
+
+            # Convert target to User format
+            if isinstance(user_or_target, InvitationTarget):
+                target_type = user_or_target.type
+                target_value = user_or_target.value
+            else:
+                target_type = user_or_target["type"]
+                target_value = user_or_target["value"]
+
+            user = AcceptUser()
+            if target_type == "email":
+                user.email = target_value
+            elif target_type in ("sms", "phoneNumber"):
+                user.phone = target_value
+            else:
+                # For other types, try to use as email
+                user.email = target_value
+
+            # Recursively call with User format
+            return self.accept_invitations_sync(invitation_ids, user)
+
+        # New User format
+        if isinstance(user_or_target, dict):
+            user = AcceptUser(**user_or_target)
+        else:
+            user = user_or_target
+
+        # Validate that either email or phone is provided
+        if not user.email and not user.phone:
+            raise ValueError("User must have either email or phone")
+
+        data = {"invitationIds": invitation_ids, "user": user.model_dump(exclude_none=True)}
 
         return self._vortex_api_request_sync("POST", "/invitations/accept", data=data)
 

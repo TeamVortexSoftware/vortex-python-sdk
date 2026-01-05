@@ -44,7 +44,7 @@ Edit these files with new version (e.g., `0.1.0`):
 
 ### 2. Test First (TestPyPI)
 ```bash
-# From packages/vortex-python-sdk directory
+# From sdks/vortex-python-sdk directory
 rm -rf dist/ build/ *.egg-info/
 python -m build
 python -m twine upload --repository testpypi dist/*

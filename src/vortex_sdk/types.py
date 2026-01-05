@@ -129,6 +129,29 @@ class InvitationTarget(BaseModel):
     value: str
 
 
+class AcceptUser(BaseModel):
+    """
+    User data for accepting invitations
+
+    Required fields: At least one of email or phone must be provided
+
+    Optional fields:
+    - email: User's email address
+    - phone: User's phone number
+    - name: User's display name
+
+    Example:
+        user = AcceptUser(email="user@example.com", name="John Doe")
+    """
+
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    name: Optional[str] = None
+
+    class Config:
+        extra = "forbid"  # Don't allow additional fields
+
+
 class InvitationAcceptance(BaseModel):
     """Represents an acceptance of an invitation"""
 
@@ -162,7 +185,7 @@ class InvitationResult(BaseModel):
         alias="deliveryTypes"
     )
     foreign_creator_id: str = Field(alias="foreignCreatorId")
-    invitation_type: Literal["single_use", "multi_use"] = Field(alias="invitationType")
+    invitation_type: Literal["single_use", "multi_use", "autojoin"] = Field(alias="invitationType")
     modified_at: Optional[str] = Field(None, alias="modifiedAt")
     status: Literal[
         "queued",
@@ -207,7 +230,7 @@ class AcceptInvitationRequest(BaseModel):
     """Request to accept one or more invitations"""
 
     invitation_ids: List[str] = Field(alias="invitationIds")
-    target: InvitationTarget
+    user: AcceptUser
 
     class Config:
         populate_by_name = True
