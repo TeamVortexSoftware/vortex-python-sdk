@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-01-23
+
+### Added
+- **Internal Invitations**: New `'internal'` delivery type for customer-managed invitations
+  - Allows creating invitations with `delivery_types: ['internal']`
+  - No email/SMS communication triggered by Vortex
+  - Target value can be any customer-defined identifier
+  - Useful for in-app invitation flows managed by customer's application
+
+### Changed
+- Updated `delivery_types` type to include `'internal'` as a valid Literal value
+
 ## [0.1.3] - 2025-01-29
 
 ### Added

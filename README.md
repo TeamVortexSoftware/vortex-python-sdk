@@ -2,6 +2,21 @@
 
 A Python SDK for Vortex invitation management and JWT generation.
 
+## Features
+
+### Invitation Delivery Types
+
+Vortex supports multiple delivery methods for invitations:
+
+- **`email`** - Email invitations sent by Vortex (includes reminders and nudges)
+- **`phone`** - Phone invitations sent by the user/customer
+- **`share`** - Shareable invitation links for social sharing
+- **`internal`** - Internal invitations managed entirely by your application
+  - No email/SMS communication triggered by Vortex
+  - Target value can be any customer-defined identifier
+  - Useful for in-app invitation flows where you handle the delivery
+  - Example use case: In-app notifications, dashboard invites, etc.
+
 ## Installation
 
 ```bash

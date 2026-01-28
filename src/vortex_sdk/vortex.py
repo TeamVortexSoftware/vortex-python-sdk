@@ -13,8 +13,13 @@ logger = logging.getLogger(__name__)
 
 from .types import (
     AcceptUser,
+    BackendCreateInvitationRequest,
+    CreateInvitationGroup,
+    CreateInvitationResponse,
+    CreateInvitationTarget,
     Invitation,
     InvitationTarget,
+    Inviter,
     User,
     VortexApiError,
 )
@@ -48,7 +53,8 @@ class Vortex:
         Generate a JWT token for a user
 
         Args:
-            user: User object or dict with 'id', 'email', and optional 'admin_scopes'
+            user: User object or dict with 'id', 'email', and optional 'name',
+                  'avatar_url', 'admin_scopes'
             **extra: Additional properties to include in JWT payload
 
         Returns:
@@ -61,7 +67,13 @@ class Vortex:
             user = {'id': 'user-123', 'email': 'user@example.com', 'admin_scopes': ['autojoin']}
             jwt = vortex.generate_jwt(user=user)
 
-            # With additional properties
+            # With additional properties including name and avatar
+            user = {
+                'id': 'user-123',
+                'email': 'user@example.com',
+                'name': 'John Doe',
+                'avatar_url': 'https://example.com/avatar.jpg'
+            }
             jwt = vortex.generate_jwt(user=user, role='admin', department='Engineering')
         """
         # Convert dict to User if needed
@@ -113,6 +125,14 @@ class Vortex:
             "userEmail": user.email,
             "expires": expires,
         }
+
+        # Add name if present (convert snake_case to camelCase for JWT)
+        if user.name:
+            jwt_payload["name"] = user.name
+
+        # Add avatarUrl if present (convert snake_case to camelCase for JWT)
+        if user.avatar_url:
+            jwt_payload["avatarUrl"] = user.avatar_url
 
         # Add adminScopes if present
         if user.admin_scopes:
@@ -399,7 +419,7 @@ class Vortex:
             user = AcceptUser()
             if target_type == "email":
                 user.email = target_value
-            elif target_type in ("sms", "phoneNumber"):
+            elif target_type in ("phone", "phoneNumber"):
                 user.phone = target_value
             else:
                 # For other types, try to use as email
@@ -492,7 +512,7 @@ class Vortex:
             user = AcceptUser()
             if target_type == "email":
                 user.email = target_value
-            elif target_type in ("sms", "phoneNumber"):
+            elif target_type in ("phone", "phoneNumber"):
                 user.phone = target_value
             else:
                 # For other types, try to use as email
@@ -634,6 +654,132 @@ class Vortex:
             "POST", f"/invitations/{invitation_id}/reinvite"
         )
         return Invitation(**response)
+
+    async def create_invitation(
+        self,
+        widget_configuration_id: str,
+        target: Union[CreateInvitationTarget, Dict[str, str]],
+        inviter: Union[Inviter, Dict[str, str]],
+        groups: Optional[List[Union[CreateInvitationGroup, Dict[str, str]]]] = None,
+        source: Optional[str] = None,
+        template_variables: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> CreateInvitationResponse:
+        """
+        Create an invitation from your backend.
+
+        This method allows you to create invitations programmatically using your API key,
+        without requiring a user JWT token. Useful for server-side invitation creation,
+        such as "People You May Know" flows or admin-initiated invitations.
+
+        Args:
+            widget_configuration_id: The widget configuration ID to use
+            target: The target of the invitation (who is being invited)
+                   - type: 'email', 'phone', or 'internal'
+                   - value: Email address, phone number, or internal user ID
+            inviter: Information about the user creating the invitation
+                    - user_id: Your internal user ID for the inviter (required)
+                    - user_email: Optional email of the inviter
+                    - name: Optional display name of the inviter
+            groups: Optional groups/scopes to associate with the invitation
+            source: Optional source for analytics (defaults to 'api')
+            template_variables: Optional template variables for email customization
+            metadata: Optional metadata passed through to webhooks
+
+        Returns:
+            CreateInvitationResponse with id, short_link, status, and created_at
+
+        Example:
+            # Create an email invitation
+            result = await vortex.create_invitation(
+                widget_configuration_id="widget-config-123",
+                target={"type": "email", "value": "invitee@example.com"},
+                inviter={"user_id": "user-456", "user_email": "inviter@example.com"},
+                groups=[{"type": "team", "group_id": "team-789", "name": "Engineering"}],
+            )
+
+            # Create an internal invitation (PYMK flow - no email sent)
+            result = await vortex.create_invitation(
+                widget_configuration_id="widget-config-123",
+                target={"type": "internal", "value": "internal-user-abc"},
+                inviter={"user_id": "user-456"},
+                source="pymk",
+            )
+        """
+        # Convert dicts to models if needed
+        if isinstance(target, dict):
+            target = CreateInvitationTarget(**target)
+        if isinstance(inviter, dict):
+            inviter = Inviter(**inviter)
+        if groups:
+            groups = [
+                CreateInvitationGroup(**g) if isinstance(g, dict) else g
+                for g in groups
+            ]
+
+        request = BackendCreateInvitationRequest(
+            widget_configuration_id=widget_configuration_id,
+            target=target,
+            inviter=inviter,
+            groups=groups,
+            source=source,
+            template_variables=template_variables,
+            metadata=metadata,
+        )
+
+        # Use by_alias=True to get camelCase keys for the API
+        response = await self._vortex_api_request(
+            "POST", "/invitations", data=request.model_dump(by_alias=True, exclude_none=True)
+        )
+        return CreateInvitationResponse(**response)
+
+    def create_invitation_sync(
+        self,
+        widget_configuration_id: str,
+        target: Union[CreateInvitationTarget, Dict[str, str]],
+        inviter: Union[Inviter, Dict[str, str]],
+        groups: Optional[List[Union[CreateInvitationGroup, Dict[str, str]]]] = None,
+        source: Optional[str] = None,
+        template_variables: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> CreateInvitationResponse:
+        """
+        Create an invitation from your backend (synchronous version).
+
+        See create_invitation() for full documentation.
+
+        Example:
+            result = vortex.create_invitation_sync(
+                widget_configuration_id="widget-config-123",
+                target={"type": "email", "value": "invitee@example.com"},
+                inviter={"user_id": "user-456"},
+            )
+        """
+        # Convert dicts to models if needed
+        if isinstance(target, dict):
+            target = CreateInvitationTarget(**target)
+        if isinstance(inviter, dict):
+            inviter = Inviter(**inviter)
+        if groups:
+            groups = [
+                CreateInvitationGroup(**g) if isinstance(g, dict) else g
+                for g in groups
+            ]
+
+        request = BackendCreateInvitationRequest(
+            widget_configuration_id=widget_configuration_id,
+            target=target,
+            inviter=inviter,
+            groups=groups,
+            source=source,
+            template_variables=template_variables,
+            metadata=metadata,
+        )
+
+        response = self._vortex_api_request_sync(
+            "POST", "/invitations", data=request.model_dump(by_alias=True, exclude_none=True)
+        )
+        return CreateInvitationResponse(**response)
 
     async def close(self) -> None:
         """Close the HTTP client"""

@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 class IdentifierInput(BaseModel):
     """Identifier structure for JWT generation"""
 
-    type: Literal["email", "sms"]
+    type: Literal["email", "phone"]
     value: str
 
 
@@ -61,12 +61,16 @@ class User(BaseModel):
     - email: User's email address
 
     Optional fields:
+    - name: User's display name
+    - avatar_url: User's avatar URL (must be HTTPS, max 2000 chars)
     - admin_scopes: List of admin scopes (e.g., ['autojoin'])
 
     Additional fields are allowed via extra parameter
     """
     id: str
     email: str
+    name: Optional[str] = None
+    avatar_url: Optional[str] = None
     admin_scopes: Optional[List[str]] = None
 
     class Config:
@@ -125,7 +129,7 @@ class JwtPayload(BaseModel):
 
 
 class InvitationTarget(BaseModel):
-    type: Literal["email", "sms"]
+    type: Literal["email", "phone"]
     value: str
 
 
@@ -181,7 +185,7 @@ class InvitationResult(BaseModel):
     created_at: str = Field(alias="createdAt")
     deactivated: bool
     delivery_count: int = Field(alias="deliveryCount")
-    delivery_types: List[Literal["email", "sms", "share"]] = Field(
+    delivery_types: List[Literal["email", "phone", "share", "internal"]] = Field(
         alias="deliveryTypes"
     )
     foreign_creator_id: str = Field(alias="foreignCreatorId")
@@ -209,6 +213,9 @@ class InvitationResult(BaseModel):
     expires: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
     pass_through: Optional[str] = Field(None, alias="passThrough")
+    source: Optional[str] = None
+    creator_name: Optional[str] = Field(None, alias="creatorName")
+    creator_avatar_url: Optional[str] = Field(None, alias="creatorAvatarUrl")
 
     class Config:
         populate_by_name = True
@@ -258,3 +265,69 @@ ApiResponseJson = Union[
     InvitationResult, Dict[str, List[InvitationResult]], Dict[str, Any]
 ]
 ApiRequestBody = Union[AcceptInvitationRequest, None]
+
+
+# --- Types for creating invitations via backend API ---
+
+class CreateInvitationTargetType(str):
+    """Target types for creating invitations"""
+    EMAIL = "email"
+    PHONE = "phone"
+    INTERNAL = "internal"
+
+
+class CreateInvitationTarget(BaseModel):
+    """Target for creating an invitation"""
+    type: Literal["email", "phone", "internal"]
+    value: str
+
+
+class Inviter(BaseModel):
+    """
+    Information about the user creating the invitation (the inviter).
+    This is equivalent to what would be extracted from a JWT in client-side flows.
+    """
+    user_id: str = Field(alias="userId")
+    user_email: Optional[str] = Field(None, alias="userEmail")
+    name: Optional[str] = None
+    avatar_url: Optional[str] = Field(None, alias="avatarUrl")
+
+    class Config:
+        populate_by_name = True
+
+
+class CreateInvitationGroup(BaseModel):
+    """Group information for creating invitations"""
+    type: str
+    group_id: str = Field(alias="groupId")
+    name: str
+
+    class Config:
+        populate_by_name = True
+
+
+class BackendCreateInvitationRequest(BaseModel):
+    """
+    Request body for creating an invitation via the public API (backend SDK use).
+    """
+    widget_configuration_id: str = Field(alias="widgetConfigurationId")
+    target: CreateInvitationTarget
+    inviter: Inviter
+    groups: Optional[List[CreateInvitationGroup]] = None
+    source: Optional[str] = None
+    template_variables: Optional[Dict[str, str]] = Field(None, alias="templateVariables")
+    metadata: Optional[Dict[str, Any]] = None
+
+    class Config:
+        populate_by_name = True
+
+
+class CreateInvitationResponse(BaseModel):
+    """Response from creating an invitation"""
+    id: str
+    short_link: str = Field(alias="shortLink")
+    status: str
+    created_at: str = Field(alias="createdAt")
+
+    class Config:
+        populate_by_name = True
