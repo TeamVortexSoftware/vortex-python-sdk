@@ -46,18 +46,13 @@ vortex = Vortex(api_key="your-vortex-api-key", base_url="https://custom-api.exam
 user = {
     "id": "user-123",
     "email": "user@example.com",
-    "admin_scopes": ["autojoin"]  # Optional - included as adminScopes array in JWT
+    "user_name": "Jane Doe",                                    # Optional: user's display name
+    "user_avatar_url": "https://example.com/avatars/jane.jpg",  # Optional: user's avatar URL
+    "admin_scopes": ["autojoin"]                                # Optional: grants autojoin admin privileges
 }
 
 jwt = vortex.generate_jwt(user=user)
 print(f"JWT: {jwt}")
-
-# With additional properties
-jwt = vortex.generate_jwt(
-    user=user,
-    role="admin",
-    department="Engineering"
-)
 
 # Or using type-safe models
 from vortex_sdk import User
@@ -65,7 +60,9 @@ from vortex_sdk import User
 user = User(
     id="user-123",
     email="user@example.com",
-    admin_scopes=["autojoin"]
+    user_name="Jane Doe",                                       # Optional
+    user_avatar_url="https://example.com/avatars/jane.jpg",     # Optional
+    admin_scopes=["autojoin"]                              # Optional
 )
 
 jwt = vortex.generate_jwt(user=user)

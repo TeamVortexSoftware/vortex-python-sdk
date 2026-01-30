@@ -61,16 +61,16 @@ class User(BaseModel):
     - email: User's email address
 
     Optional fields:
-    - name: User's display name
-    - avatar_url: User's avatar URL (must be HTTPS, max 2000 chars)
+    - user_name: User's display name
+    - user_avatar_url: User's avatar URL (must be HTTPS, max 2000 chars)
     - admin_scopes: List of admin scopes (e.g., ['autojoin'])
 
     Additional fields are allowed via extra parameter
     """
     id: str
     email: str
-    name: Optional[str] = None
-    avatar_url: Optional[str] = None
+    user_name: Optional[str] = Field(None, alias="userName")
+    user_avatar_url: Optional[str] = Field(None, alias="userAvatarUrl")
     admin_scopes: Optional[List[str]] = None
 
     class Config:
@@ -289,8 +289,8 @@ class Inviter(BaseModel):
     """
     user_id: str = Field(alias="userId")
     user_email: Optional[str] = Field(None, alias="userEmail")
-    name: Optional[str] = None
-    avatar_url: Optional[str] = Field(None, alias="avatarUrl")
+    user_name: Optional[str] = Field(None, alias="userName")
+    user_avatar_url: Optional[str] = Field(None, alias="userAvatarUrl")
 
     class Config:
         populate_by_name = True

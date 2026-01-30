@@ -126,13 +126,13 @@ class Vortex:
             "expires": expires,
         }
 
-        # Add name if present (convert snake_case to camelCase for JWT)
-        if user.name:
-            jwt_payload["name"] = user.name
+        # Add userName if present
+        if user.user_name:
+            jwt_payload["userName"] = user.user_name
 
-        # Add avatarUrl if present (convert snake_case to camelCase for JWT)
-        if user.avatar_url:
-            jwt_payload["avatarUrl"] = user.avatar_url
+        # Add userAvatarUrl if present
+        if user.user_avatar_url:
+            jwt_payload["userAvatarUrl"] = user.user_avatar_url
 
         # Add adminScopes if present
         if user.admin_scopes:
