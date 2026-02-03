@@ -129,7 +129,7 @@ class JwtPayload(BaseModel):
 
 
 class InvitationTarget(BaseModel):
-    type: Literal["email", "phone"]
+    type: Literal["email", "phone", "share", "internal"]
     value: str
 
 
@@ -194,6 +194,7 @@ class InvitationResult(BaseModel):
     status: Literal[
         "queued",
         "sending",
+        "sent",
         "delivered",
         "accepted",
         "shared",
@@ -306,6 +307,21 @@ class CreateInvitationGroup(BaseModel):
         populate_by_name = True
 
 
+class UnfurlConfig(BaseModel):
+    """
+    Configuration for link unfurl (Open Graph) metadata.
+    Controls how the invitation link appears when shared on social platforms or messaging apps.
+    """
+    title: Optional[str] = None  # og:title
+    description: Optional[str] = None  # og:description
+    image: Optional[str] = None  # og:image - must be HTTPS
+    type: Optional[Literal["website", "article", "video", "music", "book", "profile", "product"]] = None  # og:type
+    site_name: Optional[str] = Field(None, alias="siteName")  # og:site_name
+
+    class Config:
+        populate_by_name = True
+
+
 class BackendCreateInvitationRequest(BaseModel):
     """
     Request body for creating an invitation via the public API (backend SDK use).
@@ -317,6 +333,7 @@ class BackendCreateInvitationRequest(BaseModel):
     source: Optional[str] = None
     template_variables: Optional[Dict[str, str]] = Field(None, alias="templateVariables")
     metadata: Optional[Dict[str, Any]] = None
+    unfurl_config: Optional[UnfurlConfig] = Field(None, alias="unfurlConfig")
 
     class Config:
         populate_by_name = True
