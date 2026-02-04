@@ -131,6 +131,11 @@ class JwtPayload(BaseModel):
 class InvitationTarget(BaseModel):
     type: Literal["email", "phone", "share", "internal"]
     value: str
+    name: Optional[str] = None  # Display name of the person being invited
+    avatar_url: Optional[str] = Field(None, alias="avatarUrl")  # Avatar URL for the person being invited
+
+    class Config:
+        populate_by_name = True
 
 
 class AcceptUser(BaseModel):
@@ -215,6 +220,7 @@ class InvitationResult(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
     pass_through: Optional[str] = Field(None, alias="passThrough")
     source: Optional[str] = None
+    subtype: Optional[str] = None  # Customer-defined subtype for analytics segmentation
     creator_name: Optional[str] = Field(None, alias="creatorName")
     creator_avatar_url: Optional[str] = Field(None, alias="creatorAvatarUrl")
 
@@ -281,6 +287,11 @@ class CreateInvitationTarget(BaseModel):
     """Target for creating an invitation"""
     type: Literal["email", "phone", "internal"]
     value: str
+    name: Optional[str] = None  # Display name of the person being invited
+    avatar_url: Optional[str] = Field(None, alias="avatarUrl")  # Avatar URL for the person being invited
+
+    class Config:
+        populate_by_name = True
 
 
 class Inviter(BaseModel):
@@ -331,6 +342,7 @@ class BackendCreateInvitationRequest(BaseModel):
     inviter: Inviter
     groups: Optional[List[CreateInvitationGroup]] = None
     source: Optional[str] = None
+    subtype: Optional[str] = None  # Customer-defined subtype for analytics segmentation (e.g., 'pymk', 'find-friends')
     template_variables: Optional[Dict[str, str]] = Field(None, alias="templateVariables")
     metadata: Optional[Dict[str, Any]] = None
     unfurl_config: Optional[UnfurlConfig] = Field(None, alias="unfurlConfig")
