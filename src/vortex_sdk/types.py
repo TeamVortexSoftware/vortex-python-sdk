@@ -360,3 +360,33 @@ class CreateInvitationResponse(BaseModel):
 
     class Config:
         populate_by_name = True
+
+
+# --- Types for autojoin domain management ---
+
+class AutojoinDomain(BaseModel):
+    """Autojoin domain configuration"""
+    id: str
+    domain: str
+
+
+class AutojoinDomainsResponse(BaseModel):
+    """Response from autojoin API endpoints"""
+    autojoin_domains: List[AutojoinDomain] = Field(alias="autojoinDomains")
+    invitation: Optional[InvitationResult] = None
+
+    class Config:
+        populate_by_name = True
+
+
+class ConfigureAutojoinRequest(BaseModel):
+    """Request body for configuring autojoin domains"""
+    scope: str
+    scope_type: str = Field(alias="scopeType")
+    scope_name: Optional[str] = Field(None, alias="scopeName")
+    domains: List[str]
+    widget_id: str = Field(alias="widgetId")
+    metadata: Optional[Dict[str, Any]] = None
+
+    class Config:
+        populate_by_name = True

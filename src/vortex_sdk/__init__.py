@@ -11,6 +11,9 @@ from .types import (
     ApiResponse,
     ApiResponseJson,
     AuthenticatedUser,
+    AutojoinDomain,
+    AutojoinDomainsResponse,
+    ConfigureAutojoinRequest,
     CreateInvitationRequest,
     GroupInput,
     IdentifierInput,
@@ -24,7 +27,7 @@ from .types import (
 )
 from .vortex import Vortex
 
-__version__ = "0.0.6"
+__version__ = "0.7.0"
 __author__ = "TeamVortexSoftware"
 __email__ = "support@vortexsoftware.com"
 
@@ -42,6 +45,9 @@ __all__ = [
     "CreateInvitationRequest",
     "AcceptInvitationRequest",
     "AcceptInvitationsRequest",  # Alias for AcceptInvitationRequest
+    "AutojoinDomain",
+    "AutojoinDomainsResponse",
+    "ConfigureAutojoinRequest",
     "ApiResponse",
     "ApiResponseJson",
     "ApiRequestBody",

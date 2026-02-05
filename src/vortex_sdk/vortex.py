@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 
 from .types import (
     AcceptUser,
+    AutojoinDomainsResponse,
     BackendCreateInvitationRequest,
+    ConfigureAutojoinRequest,
     CreateInvitationGroup,
     CreateInvitationResponse,
     CreateInvitationTarget,
@@ -780,6 +782,160 @@ class Vortex:
             "POST", "/invitations", data=request.model_dump(by_alias=True, exclude_none=True)
         )
         return CreateInvitationResponse(**response)
+
+    async def get_autojoin_domains(
+        self, scope_type: str, scope: str
+    ) -> AutojoinDomainsResponse:
+        """
+        Get autojoin domains configured for a specific scope
+
+        Args:
+            scope_type: The type of scope (e.g., "organization", "team", "project")
+            scope: The scope identifier (customer's group ID)
+
+        Returns:
+            AutojoinDomainsResponse with autojoin_domains and associated invitation
+
+        Example:
+            result = await vortex.get_autojoin_domains("organization", "acme-org")
+            print(result.autojoin_domains)  # [AutojoinDomain(id='...', domain='acme.com')]
+        """
+        from urllib.parse import quote
+
+        response = await self._vortex_api_request(
+            "GET",
+            f"/invitations/by-scope/{quote(scope_type, safe='')}/{quote(scope, safe='')}/autojoin",
+        )
+        return AutojoinDomainsResponse(**response)
+
+    def get_autojoin_domains_sync(
+        self, scope_type: str, scope: str
+    ) -> AutojoinDomainsResponse:
+        """
+        Get autojoin domains configured for a specific scope (synchronous)
+
+        Args:
+            scope_type: The type of scope (e.g., "organization", "team", "project")
+            scope: The scope identifier (customer's group ID)
+
+        Returns:
+            AutojoinDomainsResponse with autojoin_domains and associated invitation
+
+        Example:
+            result = vortex.get_autojoin_domains_sync("organization", "acme-org")
+            print(result.autojoin_domains)  # [AutojoinDomain(id='...', domain='acme.com')]
+        """
+        from urllib.parse import quote
+
+        response = self._vortex_api_request_sync(
+            "GET",
+            f"/invitations/by-scope/{quote(scope_type, safe='')}/{quote(scope, safe='')}/autojoin",
+        )
+        return AutojoinDomainsResponse(**response)
+
+    async def configure_autojoin(
+        self,
+        scope: str,
+        scope_type: str,
+        domains: List[str],
+        widget_id: str,
+        scope_name: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> AutojoinDomainsResponse:
+        """
+        Configure autojoin domains for a specific scope
+
+        This endpoint syncs autojoin domains - it will add new domains, remove domains
+        not in the provided list, and deactivate the autojoin invitation if all domains
+        are removed (empty array).
+
+        Args:
+            scope: The scope identifier (customer's group ID)
+            scope_type: The type of scope (e.g., "organization", "team")
+            domains: Array of domains to configure for autojoin
+            widget_id: The widget configuration ID
+            scope_name: Optional display name for the scope
+            metadata: Optional metadata to attach to the invitation
+
+        Returns:
+            AutojoinDomainsResponse with updated autojoin_domains and associated invitation
+
+        Example:
+            result = await vortex.configure_autojoin(
+                scope="acme-org",
+                scope_type="organization",
+                domains=["acme.com", "acme.org"],
+                widget_id="widget-123",
+                scope_name="Acme Corporation",
+            )
+        """
+        request = ConfigureAutojoinRequest(
+            scope=scope,
+            scope_type=scope_type,
+            domains=domains,
+            widget_id=widget_id,
+            scope_name=scope_name,
+            metadata=metadata,
+        )
+
+        response = await self._vortex_api_request(
+            "POST",
+            "/invitations/autojoin",
+            data=request.model_dump(by_alias=True, exclude_none=True),
+        )
+        return AutojoinDomainsResponse(**response)
+
+    def configure_autojoin_sync(
+        self,
+        scope: str,
+        scope_type: str,
+        domains: List[str],
+        widget_id: str,
+        scope_name: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> AutojoinDomainsResponse:
+        """
+        Configure autojoin domains for a specific scope (synchronous)
+
+        This endpoint syncs autojoin domains - it will add new domains, remove domains
+        not in the provided list, and deactivate the autojoin invitation if all domains
+        are removed (empty array).
+
+        Args:
+            scope: The scope identifier (customer's group ID)
+            scope_type: The type of scope (e.g., "organization", "team")
+            domains: Array of domains to configure for autojoin
+            widget_id: The widget configuration ID
+            scope_name: Optional display name for the scope
+            metadata: Optional metadata to attach to the invitation
+
+        Returns:
+            AutojoinDomainsResponse with updated autojoin_domains and associated invitation
+
+        Example:
+            result = vortex.configure_autojoin_sync(
+                scope="acme-org",
+                scope_type="organization",
+                domains=["acme.com", "acme.org"],
+                widget_id="widget-123",
+                scope_name="Acme Corporation",
+            )
+        """
+        request = ConfigureAutojoinRequest(
+            scope=scope,
+            scope_type=scope_type,
+            domains=domains,
+            widget_id=widget_id,
+            scope_name=scope_name,
+            metadata=metadata,
+        )
+
+        response = self._vortex_api_request_sync(
+            "POST",
+            "/invitations/autojoin",
+            data=request.model_dump(by_alias=True, exclude_none=True),
+        )
+        return AutojoinDomainsResponse(**response)
 
     async def close(self) -> None:
         """Close the HTTP client"""
