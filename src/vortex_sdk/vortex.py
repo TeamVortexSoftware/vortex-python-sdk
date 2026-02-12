@@ -140,6 +140,10 @@ class Vortex:
         if user.admin_scopes:
             jwt_payload["adminScopes"] = user.admin_scopes
 
+        # Add allowedEmailDomains if present (for domain-restricted invitations)
+        if user.allowed_email_domains:
+            jwt_payload["allowedEmailDomains"] = user.allowed_email_domains
+
         # Add any additional properties from user.model_extra
         if hasattr(user, "model_extra") and user.model_extra:
             jwt_payload.update(user.model_extra)
@@ -443,6 +447,58 @@ class Vortex:
         data = {"invitationIds": invitation_ids, "user": user.model_dump(exclude_none=True)}
 
         return await self._vortex_api_request("POST", "/invitations/accept", data=data)
+
+    async def accept_invitation(
+        self,
+        invitation_id: str,
+        user: Union[AcceptUser, Dict[str, Any]],
+    ) -> Dict:
+        """
+        Accept a single invitation (recommended method)
+
+        This is the recommended method for accepting invitations.
+
+        Args:
+            invitation_id: Single invitation ID to accept
+            user: User object with email/phone/name
+
+        Returns:
+            API response
+
+        Example:
+            user = AcceptUser(email="user@example.com", name="John Doe")
+            result = await client.accept_invitation("inv-123", user)
+
+            # Or with a dict:
+            result = await client.accept_invitation("inv-123", {"email": "user@example.com"})
+        """
+        return await self.accept_invitations([invitation_id], user)
+
+    def accept_invitation_sync(
+        self,
+        invitation_id: str,
+        user: Union[AcceptUser, Dict[str, Any]],
+    ) -> Dict:
+        """
+        Accept a single invitation (synchronous, recommended method)
+
+        This is the recommended method for accepting invitations.
+
+        Args:
+            invitation_id: Single invitation ID to accept
+            user: User object with email/phone/name
+
+        Returns:
+            API response
+
+        Example:
+            user = AcceptUser(email="user@example.com", name="John Doe")
+            result = client.accept_invitation_sync("inv-123", user)
+
+            # Or with a dict:
+            result = client.accept_invitation_sync("inv-123", {"email": "user@example.com"})
+        """
+        return self.accept_invitations_sync([invitation_id], user)
 
     def accept_invitations_sync(
         self,

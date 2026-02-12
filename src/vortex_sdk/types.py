@@ -64,6 +64,8 @@ class User(BaseModel):
     - user_name: User's display name
     - user_avatar_url: User's avatar URL (must be HTTPS, max 2000 chars)
     - admin_scopes: List of admin scopes (e.g., ['autojoin'])
+    - allowed_email_domains: List of allowed email domains for invitation restrictions
+                            (e.g., ['acme.com', 'acme.org'])
 
     Additional fields are allowed via extra parameter
     """
@@ -72,9 +74,11 @@ class User(BaseModel):
     user_name: Optional[str] = Field(None, alias="userName")
     user_avatar_url: Optional[str] = Field(None, alias="userAvatarUrl")
     admin_scopes: Optional[List[str]] = None
+    allowed_email_domains: Optional[List[str]] = Field(None, alias="allowedEmailDomains")
 
     class Config:
         extra = "allow"  # Allow additional fields
+        populate_by_name = True
 
 
 class AuthenticatedUser(BaseModel):

@@ -85,21 +85,21 @@ async def get_user_invitations():
 invitations = vortex.get_invitations_by_target_sync("email", "user@example.com")
 ```
 
-#### Accept Invitations
+#### Accept an Invitation
 
 ```python
-async def accept_user_invitations():
+async def accept_user_invitation():
     # Async version
-    result = await vortex.accept_invitations(
-        invitation_ids=["inv1", "inv2"],
-        target={"type": "email", "value": "user@example.com"}
+    result = await vortex.accept_invitation(
+        invitation_id="inv-123",
+        user={"email": "user@example.com"}
     )
     print(f"Result: {result}")
 
 # Sync version
-result = vortex.accept_invitations_sync(
-    invitation_ids=["inv1", "inv2"],
-    target={"type": "email", "value": "user@example.com"}
+result = vortex.accept_invitation_sync(
+    invitation_id="inv-123",
+    user={"email": "user@example.com"}
 )
 ```
 
