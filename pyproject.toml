@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vortex-python-sdk"
-version = "0.9.0"
+version = "0.9.1"
 description = "Vortex Python SDK for invitation management and JWT generation"
 authors = [{name = "TeamVortexSoftware", email = "support@vortexsoftware.com"}]
 readme = "README.md"

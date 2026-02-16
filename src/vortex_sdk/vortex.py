@@ -196,6 +196,8 @@ class Vortex:
             "x-api-key": f"{self.api_key}",
             "Content-Type": "application/json",
             "User-Agent": f"vortex-python-sdk/{_get_version()}",
+            "x-vortex-sdk-name": "vortex-python-sdk",
+            "x-vortex-sdk-version": _get_version(),
         }
 
         try:
@@ -253,6 +255,8 @@ class Vortex:
             "x-api-key": f"{self.api_key}",
             "Content-Type": "application/json",
             "User-Agent": f"vortex-python-sdk/{_get_version()}",
+            "x-vortex-sdk-name": "vortex-python-sdk",
+            "x-vortex-sdk-version": _get_version(),
         }
 
         try:
