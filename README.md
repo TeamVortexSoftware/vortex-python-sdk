@@ -165,6 +165,46 @@ async def reinvite_user():
 invitation = vortex.reinvite_sync("invitation-id")
 ```
 
+#### Sync Internal Invitation
+
+If you're using `internal` delivery type invitations and managing the invitation flow within your own application, you can sync invitation decisions back to Vortex when users accept or decline invitations in your system.
+
+```python
+async def sync_internal_invitation_action():
+    # Async version
+    result = await vortex.sync_internal_invitation(
+        creator_id="user-123",      # The inviter's user ID in your system
+        target_value="user-456",    # The invitee's user ID in your system
+        action="accepted",          # "accepted" or "declined"
+        component_id="component-uuid"  # The widget component UUID
+    )
+    print(f"Processed: {result['processed']}")
+    print(f"Invitation IDs: {result['invitationIds']}")
+
+# Sync version
+result = vortex.sync_internal_invitation_sync(
+    creator_id="user-123",
+    target_value="user-456",
+    action="accepted",
+    component_id="component-uuid"
+)
+```
+
+**Parameters:**
+- `creator_id` (str) — The inviter's user ID in your system
+- `target_value` (str) — The invitee's user ID in your system
+- `action` ("accepted" | "declined") — The invitation decision
+- `component_id` (str) — The widget component UUID
+
+**Response:**
+- `processed` (int) — Count of invitations processed
+- `invitationIds` (list[str]) — IDs of processed invitations
+
+**Use cases:**
+- You handle invitation delivery through your own in-app notifications or UI
+- Users accept/decline invitations within your application
+- You need to keep Vortex updated with the invitation status
+
 ### Context Manager Usage
 
 ```python
