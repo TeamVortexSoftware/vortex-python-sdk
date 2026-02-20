@@ -383,6 +383,26 @@ class AutojoinDomainsResponse(BaseModel):
         populate_by_name = True
 
 
+class SyncInternalInvitationRequest(BaseModel):
+    """Request body for syncing an internal invitation action"""
+    creator_id: str = Field(alias="creatorId")
+    target_value: str = Field(alias="targetValue")
+    action: Literal["accepted", "declined"]
+    component_id: str = Field(alias="componentId")
+
+    class Config:
+        populate_by_name = True
+
+
+class SyncInternalInvitationResponse(BaseModel):
+    """Response from syncing an internal invitation action"""
+    processed: int
+    invitation_ids: List[str] = Field(alias="invitationIds")
+
+    class Config:
+        populate_by_name = True
+
+
 class ConfigureAutojoinRequest(BaseModel):
     """Request body for configuring autojoin domains"""
     scope: str

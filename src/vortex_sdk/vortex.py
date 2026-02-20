@@ -22,6 +22,8 @@ from .types import (
     Invitation,
     InvitationTarget,
     Inviter,
+    SyncInternalInvitationRequest,
+    SyncInternalInvitationResponse,
     User,
     VortexApiError,
 )
@@ -996,6 +998,85 @@ class Vortex:
             data=request.model_dump(by_alias=True, exclude_none=True),
         )
         return AutojoinDomainsResponse(**response)
+
+    async def sync_internal_invitation(
+        self,
+        creator_id: str,
+        target_value: str,
+        action: str,
+        component_id: str,
+    ) -> SyncInternalInvitationResponse:
+        """
+        Sync an internal invitation action (accept or decline)
+
+        This method notifies Vortex that an internal invitation was accepted or declined
+        within your application, so Vortex can update the invitation status accordingly.
+
+        Args:
+            creator_id: The inviter's user ID
+            target_value: The invitee's user ID
+            action: The action taken: "accepted" or "declined"
+            component_id: The widget component UUID
+
+        Returns:
+            SyncInternalInvitationResponse with processed count and invitation_ids
+
+        Example:
+            result = await vortex.sync_internal_invitation(
+                creator_id="user-123",
+                target_value="user-456",
+                action="accepted",
+                component_id="component-uuid-789",
+            )
+            print(f"Processed {result.processed} invitations")
+        """
+        request = SyncInternalInvitationRequest(
+            creator_id=creator_id,
+            target_value=target_value,
+            action=action,
+            component_id=component_id,
+        )
+
+        response = await self._vortex_api_request(
+            "POST",
+            "/invitation-actions/sync-internal-invitation",
+            data=request.model_dump(by_alias=True),
+        )
+        return SyncInternalInvitationResponse(**response)
+
+    def sync_internal_invitation_sync(
+        self,
+        creator_id: str,
+        target_value: str,
+        action: str,
+        component_id: str,
+    ) -> SyncInternalInvitationResponse:
+        """
+        Sync an internal invitation action (accept or decline) (synchronous)
+
+        See sync_internal_invitation() for full documentation.
+
+        Example:
+            result = vortex.sync_internal_invitation_sync(
+                creator_id="user-123",
+                target_value="user-456",
+                action="accepted",
+                component_id="component-uuid-789",
+            )
+        """
+        request = SyncInternalInvitationRequest(
+            creator_id=creator_id,
+            target_value=target_value,
+            action=action,
+            component_id=component_id,
+        )
+
+        response = self._vortex_api_request_sync(
+            "POST",
+            "/invitation-actions/sync-internal-invitation",
+            data=request.model_dump(by_alias=True),
+        )
+        return SyncInternalInvitationResponse(**response)
 
     async def close(self) -> None:
         """Close the HTTP client"""

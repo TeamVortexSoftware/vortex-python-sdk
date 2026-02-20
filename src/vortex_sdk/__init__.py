@@ -23,11 +23,13 @@ from .types import (
     InvitationResult,
     InvitationTarget,
     JwtPayload,
+    SyncInternalInvitationRequest,
+    SyncInternalInvitationResponse,
     VortexApiError,
 )
 from .vortex import Vortex
 
-__version__ = "0.7.0"
+__version__ = "0.9.2"
 __author__ = "TeamVortexSoftware"
 __email__ = "support@vortexsoftware.com"
 
@@ -48,6 +50,8 @@ __all__ = [
     "AutojoinDomain",
     "AutojoinDomainsResponse",
     "ConfigureAutojoinRequest",
+    "SyncInternalInvitationRequest",
+    "SyncInternalInvitationResponse",
     "ApiResponse",
     "ApiResponseJson",
     "ApiRequestBody",
