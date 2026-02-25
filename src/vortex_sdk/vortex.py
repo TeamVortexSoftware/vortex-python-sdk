@@ -1039,7 +1039,7 @@ class Vortex:
 
         response = await self._vortex_api_request(
             "POST",
-            "/invitation-actions/sync-internal-invitation",
+            "/invitations/sync-internal-invitation",
             data=request.model_dump(by_alias=True),
         )
         return SyncInternalInvitationResponse(**response)
@@ -1073,7 +1073,7 @@ class Vortex:
 
         response = self._vortex_api_request_sync(
             "POST",
-            "/invitation-actions/sync-internal-invitation",
+            "/invitations/sync-internal-invitation",
             data=request.model_dump(by_alias=True),
         )
         return SyncInternalInvitationResponse(**response)
