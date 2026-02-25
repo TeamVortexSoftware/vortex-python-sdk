@@ -257,6 +257,53 @@ ruff check src/ tests/
 mypy src/
 ```
 
+## Webhooks
+
+The SDK provides built-in support for verifying and parsing incoming webhook events from Vortex.
+
+### Setup
+
+```python
+import os
+from vortex_sdk import VortexWebhooks, is_webhook_event, is_analytics_event
+
+webhooks = VortexWebhooks(secret=os.environ["VORTEX_WEBHOOK_SECRET"])
+```
+
+### Verifying and Parsing Events
+
+```python
+# In your HTTP handler (Flask example):
+@app.route("/webhooks/vortex", methods=["POST"])
+def handle_webhook():
+    payload = request.get_data(as_text=True)
+    signature = request.headers.get("X-Vortex-Signature", "")
+
+    try:
+        event = webhooks.construct_event(payload, signature)
+    except VortexWebhookSignatureError:
+        return "Invalid signature", 400
+
+    if is_webhook_event(event.__dict__):
+        print(f"Webhook event: {event.type}")
+    elif is_analytics_event(event.__dict__):
+        print(f"Analytics event: {event.name}")
+
+    return "OK", 200
+```
+
+### Event Types
+
+Webhook event types are available as the `WebhookEventType` enum:
+
+```python
+from vortex_sdk import WebhookEventType
+
+if event.type == WebhookEventType.INVITATION_ACCEPTED:
+    # Handle invitation accepted
+    pass
+```
+
 ## License
 
 MIT

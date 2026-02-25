@@ -28,8 +28,18 @@ from .types import (
     VortexApiError,
 )
 from .vortex import Vortex
+from .webhook_types import (
+    AnalyticsEventType,
+    VortexAnalyticsEvent,
+    VortexEvent,
+    VortexWebhookEvent,
+    WebhookEventType,
+    is_analytics_event,
+    is_webhook_event,
+)
+from .webhooks import VortexWebhookSignatureError, VortexWebhooks
 
-__version__ = "0.9.2"
+__version__ = "0.10.0"
 __author__ = "TeamVortexSoftware"
 __email__ = "support@vortexsoftware.com"
 
@@ -56,4 +66,13 @@ __all__ = [
     "ApiResponseJson",
     "ApiRequestBody",
     "VortexApiError",
+    "VortexWebhooks",
+    "VortexWebhookSignatureError",
+    "VortexWebhookEvent",
+    "VortexAnalyticsEvent",
+    "VortexEvent",
+    "WebhookEventType",
+    "AnalyticsEventType",
+    "is_webhook_event",
+    "is_analytics_event",
 ]
