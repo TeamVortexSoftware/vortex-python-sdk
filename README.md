@@ -23,6 +23,8 @@ Vortex supports multiple delivery methods for invitations:
 pip install vortex-python-sdk
 ```
 
+If your project uses `requirements.txt`, `pyproject.toml`, or a platform-specific build config, make sure `vortex-python-sdk` is added there as well so it gets installed in your deployment environment.
+
 > **Note**: The package will be available on PyPI once published. See [PUBLISHING.md](PUBLISHING.md) for publishing instructions.
 
 ## Usage
